@@ -19,7 +19,8 @@ let sport = null;
 const PRESETS_PATH = path.join(__dirname, "presets.json");
 
 function getDefaultPresets() {
-  return new Array(10).fill(0);
+  // 只存 Preset1~Preset9，共 9 個數值（秒數）
+  return new Array(9).fill(0);
 }
 
 function ensurePresetsFile() {
@@ -41,6 +42,7 @@ app.get("/api/presets", (req, res) => {
     if (!Array.isArray(data.presets)) {
       data.presets = getDefaultPresets();
     }
+    // 這裡回傳的 presets 長度為 9，代表 1~9
     res.json({ presets: data.presets });
   } catch (err) {
     console.error("Failed to read presets.json, recreating...", err);
@@ -58,11 +60,13 @@ app.post("/api/presets", (req, res) => {
   try {
     const body = req.body || {};
     const incoming = Array.isArray(body.presets) ? body.presets : null;
-    if (!incoming || incoming.length !== 10) {
-      return res.status(400).json({ error: "presets must be an array of 10 numbers" });
+    // 只接受 9 個（Preset1~9）
+    if (!incoming || incoming.length !== 9) {
+      return res
+        .status(400)
+        .json({ error: "presets must be an array of 9 numbers" });
     }
-    const cleaned = incoming.map((v, idx) => {
-      if (idx === 0) return 0;
+    const cleaned = incoming.map((v) => {
       const n = Number.isFinite(v) ? v : parseInt(v, 10) || 0;
       return Math.max(0, n);
     });

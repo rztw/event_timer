@@ -42,11 +42,14 @@ async function loadPresetsFromServer() {
     if (!res.ok) return;
     const data = await res.json();
     if (!data || !Array.isArray(data.presets)) return;
+    // 從伺服器拿到的是 9 個值（Preset1~9），映射到本地 presets[1..9]
     data.presets.forEach((v, idx) => {
-      if (idx < presets.length) {
-        presets[idx] = Number.isFinite(v) ? v : parseInt(v, 10) || 0;
+      const targetIndex = idx + 1; // 1~9
+      if (targetIndex < presets.length) {
+        presets[targetIndex] = Number.isFinite(v) ? v : parseInt(v, 10) || 0;
       }
     });
+    // Preset0 永遠保持 0，不存到檔案
     presets[0] = 0;
   } catch (err) {
     console.error("Failed to load presets from server", err);
@@ -60,7 +63,8 @@ async function savePresetsToServer() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ presets }),
+      // 只把 Preset1~9 存到檔案中
+      body: JSON.stringify({ presets: presets.slice(1) }),
     });
   } catch (err) {
     console.error("Failed to save presets to server", err);
