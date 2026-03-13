@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TIMER CONTROL</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app">
+      <div class="top-bar">
+        <h1 class="title">TIMER CONTROL</h1>
+        <div class="connection-wrapper">
+          <button id="connection-btn" class="connection-btn" type="button">
+            <span class="connection-label">OFFLINE</span>
+            <span class="connection-dot"></span>
+          </button>
+          <div id="connection-menu" class="connection-menu"></div>
+        </div>
+      </div>
+
+      <div class="dimmer-row">
+        <span class="dimmer-label">DIMMER</span>
+        <div class="dimmer-control">
+          <input
+            id="dimmer-slider"
+            class="dimmer-slider"
+            type="range"
+            min="0"
+            max="100"
+            value="100"
+          />
+          <span id="dimmer-value" class="dimmer-value">100%</span>
+        </div>
+      </div>
+
+      <div class="timer-card">
+        <div class="time-display" id="time-display">01:00</div>
+
+        <div class="controls">
+          <button id="start-btn" class="btn primary">Start</button>
+          <button id="pause-btn" class="btn warn">Pause</button>
+          <button id="reset-btn" class="btn danger">Reset</button>
+        </div>
+
+        <div class="config">
+          <div class="config-input-group">
+            <div class="time-field">
+              <button
+                id="minutes-up"
+                class="step-btn step-btn-up"
+                type="button"
+              >
+                +
+              </button>
+              <input
+                id="minutes-input"
+                type="number"
+                min="0"
+                max="99"
+                placeholder="MM"
+                value="1"
+              />
+              <button
+                id="minutes-down"
+                class="step-btn step-btn-down"
+                type="button"
+              >
+                -
+              </button>
+            </div>
+            <span class="config-sep">:</span>
+            <div class="time-field">
+              <button
+                id="seconds-up"
+                class="step-btn step-btn-up"
+                type="button"
+              >
+                +
+              </button>
+              <input
+                id="seconds-input"
+                type="number"
+                min="0"
+                max="59"
+                placeholder="SS"
+                value="0"
+              />
+              <button
+                id="seconds-down"
+                class="step-btn step-btn-down"
+                type="button"
+              >
+                -
+              </button>
+            </div>
+            <div class="config-actions">
+              <button id="set-btn" class="btn set-btn" type="button">
+                Set
+              </button>
+              <button id="save-btn" class="btn save-btn" type="button">
+                Save to
+              </button>
+            </div>
+          </div>
+        </div>
+        <p class="hint">
+          按下 Start 從設定時間倒數到 00:00 並停住。</br>在00:00 狀態下按 Start 開始正數模式。
+        </p>
+      </div>
+
+      <div class="preset-card">
+        <div class="preset-header">
+          <div class="preset-title">Presets</div>
+          <label class="auto-set-toggle">
+            <span class="auto-set-label">AUTO SET</span>
+            <input id="auto-set-toggle" type="checkbox" checked />
+            <span class="auto-set-track">
+              <span class="auto-set-thumb"></span>
+            </span>
+          </label>
+        </div>
+        <div class="preset-grid">
+          <button class="preset-btn" data-preset="0"></button>
+          <button class="preset-btn" data-preset="1"></button>
+          <button class="preset-btn" data-preset="2"></button>
+          <button class="preset-btn" data-preset="3"></button>
+          <button class="preset-btn" data-preset="4"></button>
+          <button class="preset-btn" data-preset="5"></button>
+          <button class="preset-btn" data-preset="6"></button>
+          <button class="preset-btn" data-preset="7"></button>
+          <button class="preset-btn" data-preset="8"></button>
+          <button class="preset-btn" data-preset="9"></button>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+  </html>
+
