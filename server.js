@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("path");
+const fs = require("fs");
 const SerialPort = require("serialport");
 
 const app = express();
@@ -15,6 +16,64 @@ app.get("/", (req, res) => {
 });
 
 let sport = null;
+const PRESETS_PATH = path.join(__dirname, "presets.json");
+
+function getDefaultPresets() {
+  return new Array(10).fill(0);
+}
+
+function ensurePresetsFile() {
+  try {
+    fs.accessSync(PRESETS_PATH, fs.constants.F_OK);
+  } catch {
+    const initial = { presets: getDefaultPresets() };
+    fs.writeFileSync(PRESETS_PATH, JSON.stringify(initial, null, 2), "utf8");
+  }
+}
+
+ensurePresetsFile();
+
+app.get("/api/presets", (req, res) => {
+  try {
+    ensurePresetsFile();
+    const raw = fs.readFileSync(PRESETS_PATH, "utf8");
+    const data = JSON.parse(raw || "{}");
+    if (!Array.isArray(data.presets)) {
+      data.presets = getDefaultPresets();
+    }
+    res.json({ presets: data.presets });
+  } catch (err) {
+    console.error("Failed to read presets.json, recreating...", err);
+    const fallback = { presets: getDefaultPresets() };
+    try {
+      fs.writeFileSync(PRESETS_PATH, JSON.stringify(fallback, null, 2), "utf8");
+    } catch (e) {
+      console.error("Failed to recreate presets.json", e);
+    }
+    res.json(fallback);
+  }
+});
+
+app.post("/api/presets", (req, res) => {
+  try {
+    const body = req.body || {};
+    const incoming = Array.isArray(body.presets) ? body.presets : null;
+    if (!incoming || incoming.length !== 10) {
+      return res.status(400).json({ error: "presets must be an array of 10 numbers" });
+    }
+    const cleaned = incoming.map((v, idx) => {
+      if (idx === 0) return 0;
+      const n = Number.isFinite(v) ? v : parseInt(v, 10) || 0;
+      return Math.max(0, n);
+    });
+    const payload = { presets: cleaned };
+    fs.writeFileSync(PRESETS_PATH, JSON.stringify(payload, null, 2), "utf8");
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Failed to write presets.json", err);
+    res.status(500).json({ error: "Failed to write presets.json" });
+  }
+});
 
 app.get("/api/serial/ports", async (req, res) => {
   try {

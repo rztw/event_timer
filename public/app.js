@@ -36,6 +36,37 @@ let dimmerPushTimeout = null;
 let displayMode = "timer"; // "timer" | "clock"
 let clockIntervalId = null;
 
+async function loadPresetsFromServer() {
+  try {
+    const res = await fetch("/api/presets");
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data || !Array.isArray(data.presets)) return;
+    data.presets.forEach((v, idx) => {
+      if (idx < presets.length) {
+        presets[idx] = Number.isFinite(v) ? v : parseInt(v, 10) || 0;
+      }
+    });
+    presets[0] = 0;
+  } catch (err) {
+    console.error("Failed to load presets from server", err);
+  }
+}
+
+async function savePresetsToServer() {
+  try {
+    await fetch("/api/presets", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ presets }),
+    });
+  } catch (err) {
+    console.error("Failed to save presets to server", err);
+  }
+}
+
 function formatTime(totalSeconds) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
@@ -498,6 +529,7 @@ presetButtons.forEach((btn) => {
       renderPresets();
       isSavingPreset = false;
       presetButtons.forEach((b) => b.classList.remove("save-target"));
+      savePresetsToServer();
     } else {
       const seconds = presets[idx] || 0;
       syncInputs(seconds);
@@ -508,7 +540,9 @@ presetButtons.forEach((btn) => {
   });
 });
 
-applyFromInput(false);
-renderPresets();
-render();
-
+(async () => {
+  await loadPresetsFromServer();
+  applyFromInput(false);
+  renderPresets();
+  render();
+})();
