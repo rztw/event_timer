@@ -17,6 +17,8 @@ const autoSetToggle = document.getElementById("auto-set-toggle");
 const connectionLabel = document.querySelector(".connection-label");
 const dimmerSlider = document.getElementById("dimmer-slider");
 const dimmerValueEl = document.getElementById("dimmer-value");
+const modeToggle = document.getElementById("mode-toggle");
+const clockSecondsEl = document.getElementById("clock-seconds");
 
 let initialCountdownSeconds = 60;
 let currentSeconds = initialCountdownSeconds;
@@ -31,6 +33,8 @@ let autoSetEnabled = true;
 let dimmerValue = 255;
 let lastDimmerPushAt = 0;
 let dimmerPushTimeout = null;
+let displayMode = "timer"; // "timer" | "clock"
+let clockIntervalId = null;
 
 function formatTime(totalSeconds) {
   const minutes = Math.floor(totalSeconds / 60);
@@ -42,22 +46,41 @@ function formatTime(totalSeconds) {
 
 function render() {
   const safeSeconds = Math.abs(currentSeconds);
-  timeDisplay.textContent = formatTime(safeSeconds);
-  if (mode === "countup") {
-    timeDisplay.classList.add("countup");
-  } else {
+  let outMinutes;
+  let outSeconds;
+
+  if (displayMode === "clock") {
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const seconds = now.getSeconds();
+    outMinutes = hours;
+    outSeconds = minutes;
+    const hh = String(hours).padStart(2, "0");
+    const mm = String(minutes).padStart(2, "0");
+    const ss = String(seconds).padStart(2, "0");
+    timeDisplay.innerHTML = `${hh}:${mm}<span class="clock-seconds-inline">:${ss}</span>`;
     timeDisplay.classList.remove("countup");
+    timeDisplay.classList.add("clock-mode");
+  } else {
+    timeDisplay.textContent = formatTime(safeSeconds);
+    if (mode === "countup") {
+      timeDisplay.classList.add("countup");
+    } else {
+      timeDisplay.classList.remove("countup");
+    }
+    timeDisplay.classList.remove("clock-mode");
+    outMinutes = Math.floor(safeSeconds / 60);
+    outSeconds = safeSeconds % 60;
   }
 
   if (serialConnected) {
-    const minutes = Math.floor(safeSeconds / 60);
-    const seconds = safeSeconds % 60;
     fetch("/api/serial/time", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ m: minutes, s: seconds, d: dimmerValue }),
+      body: JSON.stringify({ m: outMinutes, s: outSeconds, d: dimmerValue }),
     }).catch((err) => {
       console.error("Failed to send serial time", err);
     });
@@ -68,6 +91,44 @@ function syncConnectionUI() {
   if (connectionLabel) {
     connectionLabel.textContent = serialConnected ? "ONLINE" : "OFFLINE";
   }
+}
+
+function syncModeUI() {
+  if (!modeToggle) return;
+  const modeRoot = modeToggle.closest(".mode-toggle");
+  const modeLeft = modeRoot?.querySelector(".mode-option-left");
+  const modeRight = modeRoot?.querySelector(".mode-option-right");
+  displayMode = modeToggle.checked ? "clock" : "timer";
+  if (modeRoot) {
+    if (displayMode === "clock") {
+      modeRoot.classList.add("mode-clock-on");
+    } else {
+      modeRoot.classList.remove("mode-clock-on");
+    }
+  }
+
+  if (modeLeft && modeRight) {
+    if (displayMode === "clock") {
+      modeLeft.classList.remove("mode-option-left-active");
+      modeRight.classList.add("mode-option-right-active");
+    } else {
+      modeRight.classList.remove("mode-option-right-active");
+      modeLeft.classList.add("mode-option-left-active");
+    }
+  }
+
+  if (displayMode === "clock") {
+    if (!clockIntervalId) {
+      clockIntervalId = setInterval(() => {
+        render();
+      }, 1000);
+    }
+  } else if (clockIntervalId) {
+    clearInterval(clockIntervalId);
+    clockIntervalId = null;
+  }
+
+  render();
 }
 
 function readInitialFromInput() {
@@ -343,6 +404,11 @@ secondsUpBtn.addEventListener("click", () => stepSeconds(1));
 secondsDownBtn.addEventListener("click", () => stepSeconds(-1));
 connectionBtn.addEventListener("click", handleConnectionClick);
 
+if (modeToggle) {
+  modeToggle.addEventListener("change", syncModeUI);
+  syncModeUI();
+}
+
 if (autoSetToggle) {
   const autoSetRoot = autoSetToggle.closest(".auto-set-toggle");
 
@@ -368,9 +434,17 @@ if (dimmerSlider && dimmerValueEl) {
     const MIN_INTERVAL = 100;
 
     const send = () => {
-      const safeSeconds = Math.abs(currentSeconds);
-      const minutes = Math.floor(safeSeconds / 60);
-      const seconds = safeSeconds % 60;
+      let minutes;
+      let seconds;
+      if (displayMode === "clock") {
+        const now = new Date();
+        minutes = now.getHours();
+        seconds = now.getMinutes();
+      } else {
+        const safeSeconds = Math.abs(currentSeconds);
+        minutes = Math.floor(safeSeconds / 60);
+        seconds = safeSeconds % 60;
+      }
       lastDimmerPushAt = Date.now();
       fetch("/api/serial/time", {
         method: "POST",

@@ -9,7 +9,16 @@
   <body>
     <div class="app">
       <div class="top-bar">
-        <h1 class="title">TIMER CONTROL</h1>
+        <div class="mode-wrapper">
+          <label class="mode-toggle">
+            <span class="mode-option mode-option-left">TIMER</span>
+            <input id="mode-toggle" type="checkbox" />
+            <span class="mode-track">
+              <span class="mode-thumb"></span>
+            </span>
+            <span class="mode-option mode-option-right">CLOCK</span>
+          </label>
+        </div>
         <div class="connection-wrapper">
           <button id="connection-btn" class="connection-btn" type="button">
             <span class="connection-label">OFFLINE</span>
@@ -133,6 +142,11 @@
           <button class="preset-btn" data-preset="9"></button>
         </div>
       </div>
+      <footer class="footer">
+        <span class="footer-text">
+          &copy; Developed by Hex with <span class="footer-heart">&hearts;</span>.
+        </span>
+      </footer>
     </div>
 
     <script src="app.js"></script>
