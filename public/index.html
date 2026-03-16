@@ -142,6 +142,63 @@
           <button class="preset-btn" data-preset="9"></button>
         </div>
       </div>
+      <div class="display-settings-bar">
+        <div class="display-settings-left">
+          <div class="display-settings-group">
+            <span class="display-settings-label">DISPLAY COLOR</span>
+            <div class="display-color-buttons">
+              <button
+                type="button"
+                class="display-color-btn"
+                data-color="white"
+              >
+                WHITE
+              </button>
+              <button
+                type="button"
+                class="display-color-btn"
+                data-color="lightblue"
+              >
+                LIGHT BLUE
+              </button>
+              <button
+                type="button"
+                class="display-color-btn"
+                data-color="lightyellow"
+              >
+                LIGHT YELLOW
+              </button>
+            </div>
+          </div>
+          <div class="display-settings-group compact">
+            <span class="display-settings-label">BORDER / SHADOW</span>
+            <div class="display-effect-row">
+              <select id="display-effect" class="display-effect-select">
+                <option value="none">NO BORDER</option>
+                <option value="border">BLACK BORDER</option>
+                <option value="shadow">BLACK SHADOW</option>
+              </select>
+              <input
+                id="display-width"
+                class="display-width-range"
+                type="range"
+                min="0"
+                max="20"
+                value="4"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="display-settings-right">
+          <button
+            id="open-display-btn"
+            class="btn display-open-btn"
+            type="button"
+          >
+            DISPLAY WINDOW
+          </button>
+        </div>
+      </div>
       <footer class="footer">
         <span class="footer-text">
           &copy; Developed by Hex with <span class="footer-heart">&hearts;</span>.
@@ -149,6 +206,7 @@
       </footer>
     </div>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script src="app.js"></script>
   </body>
   </html>

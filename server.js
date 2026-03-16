@@ -1,9 +1,14 @@
 const express = require("express");
+const http = require("http");
 const path = require("path");
 const fs = require("fs");
 const SerialPort = require("serialport");
 
 const app = express();
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(server);
+
 const PORT = process.env.PORT || 3100;
 
 app.use(express.json());
@@ -13,6 +18,10 @@ app.use(express.static(publicDir));
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(publicDir, "index.html"));
+});
+
+app.get("/display", (req, res) => {
+  res.sendFile(path.join(publicDir, "display.html"));
 });
 
 let sport = null;
@@ -178,7 +187,35 @@ app.post("/api/serial/disconnect", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+io.on("connection", (socket) => {
+  console.log("WebSocket client connected:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("WebSocket client disconnected:", socket.id);
+  });
+
+  // 接收主控頁的時間狀態並廣播給所有連線（包含自己）
+  socket.on("time:update", (payload) => {
+    if (!payload || typeof payload.text !== "string") return;
+    io.emit("time:update", payload);
+  });
+
+  // 接收主畫面的 display 設定並廣播給所有連線
+  socket.on("display:settings", (payload) => {
+    if (!payload) return;
+    const color = payload.color || "white";
+    const effect = payload.effect || "none";
+    let width = payload.width;
+    if (!Number.isFinite(width)) {
+      width = parseInt(width, 10);
+      if (!Number.isFinite(width)) width = 4;
+    }
+    width = Math.max(0, Math.min(20, width));
+    io.emit("display:settings", { color, effect, width });
+  });
+});
+
+server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 

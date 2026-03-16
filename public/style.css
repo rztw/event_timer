@@ -232,6 +232,8 @@ body {
 
 .time-display {
   font-variant-numeric: tabular-nums;
+  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
   font-size: 5.6rem;
   text-align: center;
   margin-bottom: 32px;
@@ -249,6 +251,8 @@ body {
 .clock-seconds-inline {
   font-size: 1.8rem;
   font-variant-numeric: tabular-nums;
+  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
   margin-left: 6px;
 }
 
@@ -357,6 +361,8 @@ body {
   color: #e5e7eb;
   font-size: 1.4rem;
   font-variant-numeric: tabular-nums;
+  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
   text-align: center;
   box-shadow: 0 6px 14px rgba(15, 23, 42, 0.6);
 }
@@ -511,6 +517,139 @@ body {
   border-radius: 16px;
   border: 1px solid rgba(148, 163, 184, 0.3);
   background: rgba(15, 23, 42, 0.9);
+}
+
+.display-settings-bar {
+  margin-top: 20px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.display-settings-left {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.display-settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.display-settings-group.compact {
+  gap: 4px;
+}
+
+.display-settings-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+
+.display-color-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.display-color-btn {
+  flex: 1;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.8);
+  background: rgba(15, 23, 42, 0.9);
+  color: #e5e7eb;
+  font-size: 0.7rem;
+  padding: 5px 0;
+  cursor: pointer;
+  text-align: center;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: background 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease, color 0.15s ease, transform 0.08s ease;
+}
+
+.display-color-btn:hover {
+  background: #e5e7eb;
+  color: #111827;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.5);
+}
+
+.display-color-btn.active {
+  border-color: #fbbf24;
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.9);
+}
+
+.display-effect-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.display-effect-select {
+  min-width: 120px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.9);
+  background: rgba(15, 23, 42, 0.95);
+  color: #e5e7eb;
+  font-size: 0.75rem;
+}
+
+.display-width-range {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    #6b7280 0%,
+    #6b7280 100%,
+    rgba(31, 41, 55, 0.8) 100%,
+    rgba(31, 41, 55, 0.8) 100%
+  );
+  outline: none;
+}
+
+.display-width-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #4b5563;
+  border: 2px solid #9ca3af;
+  box-shadow: 0 0 4px rgba(31, 41, 55, 0.6);
+  cursor: pointer;
+}
+
+.display-width-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #4b5563;
+  border: 2px solid #9ca3af;
+  box-shadow: 0 0 4px rgba(31, 41, 55, 0.6);
+  cursor: pointer;
+}
+
+.display-settings-right {
+  display: flex;
+  align-items: center;
+}
+
+.display-open-btn {
+  font-size: 0.9rem;
+  min-width: 150px;
+  padding-inline: 16px;
 }
 
 .preset-header {

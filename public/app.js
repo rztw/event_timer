@@ -1,3 +1,5 @@
+const socket = window.io ? window.io() : null;
+
 const timeDisplay = document.getElementById("time-display");
 const startBtn = document.getElementById("start-btn");
 const pauseBtn = document.getElementById("pause-btn");
@@ -19,6 +21,10 @@ const dimmerSlider = document.getElementById("dimmer-slider");
 const dimmerValueEl = document.getElementById("dimmer-value");
 const modeToggle = document.getElementById("mode-toggle");
 const clockSecondsEl = document.getElementById("clock-seconds");
+const displayColorButtons = document.querySelectorAll(".display-color-btn");
+const displayEffectSelect = document.getElementById("display-effect");
+const displayWidthRange = document.getElementById("display-width");
+const openDisplayBtn = document.getElementById("open-display-btn");
 
 let initialCountdownSeconds = 60;
 let currentSeconds = initialCountdownSeconds;
@@ -35,6 +41,73 @@ let lastDimmerPushAt = 0;
 let dimmerPushTimeout = null;
 let displayMode = "timer"; // "timer" | "clock"
 let clockIntervalId = null;
+let displaySettings = {
+  color: "white",
+  effect: "none",
+  width: 4,
+};
+
+const DISPLAY_COLOR_MAP = {
+  white: "#ffffff",
+  lightblue: "#bfdbfe",
+  lightyellow: "#fef9c3",
+};
+
+function loadDisplaySettings() {
+  try {
+    const raw = window.localStorage.getItem("display-settings");
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data && typeof data === "object") {
+      displaySettings = {
+        color: data.color || displaySettings.color,
+        effect: data.effect || displaySettings.effect,
+        width:
+          Number.isFinite(data.width) || typeof data.width === "number"
+            ? data.width
+            : displaySettings.width,
+      };
+    }
+  } catch {
+    // ignore
+  }
+}
+
+function saveDisplaySettings() {
+  try {
+    window.localStorage.setItem("display-settings", JSON.stringify(displaySettings));
+  } catch {
+    // ignore
+  }
+}
+
+function syncDisplaySettingsUI() {
+  if (displayColorButtons && displayColorButtons.length) {
+    displayColorButtons.forEach((btn) => {
+      const key = btn.dataset.color;
+      if (key === displaySettings.color) {
+        btn.classList.add("active");
+      } else {
+        btn.classList.remove("active");
+      }
+    });
+  }
+  if (displayEffectSelect) {
+    displayEffectSelect.value = displaySettings.effect;
+  }
+  if (displayWidthRange) {
+    displayWidthRange.value = String(
+      Math.max(0, Math.min(20, displaySettings.width || 0))
+    );
+  }
+}
+
+function broadcastDisplaySettings() {
+  if (socket) {
+    socket.emit("display:settings", displaySettings);
+  }
+  saveDisplaySettings();
+}
 
 async function loadPresetsFromServer() {
   try {
@@ -83,6 +156,7 @@ function render() {
   const safeSeconds = Math.abs(currentSeconds);
   let outMinutes;
   let outSeconds;
+  let displayText = "00:00";
 
   if (displayMode === "clock") {
     const now = new Date();
@@ -94,11 +168,14 @@ function render() {
     const hh = String(hours).padStart(2, "0");
     const mm = String(minutes).padStart(2, "0");
     const ss = String(seconds).padStart(2, "0");
+    // display 視窗只需要 XX:XX，這裡用 HH:MM
+    displayText = `${hh}:${mm}`;
     timeDisplay.innerHTML = `${hh}:${mm}<span class="clock-seconds-inline">:${ss}</span>`;
     timeDisplay.classList.remove("countup");
     timeDisplay.classList.add("clock-mode");
   } else {
-    timeDisplay.textContent = formatTime(safeSeconds);
+    displayText = formatTime(safeSeconds);
+    timeDisplay.textContent = displayText;
     if (mode === "countup") {
       timeDisplay.classList.add("countup");
     } else {
@@ -107,6 +184,23 @@ function render() {
     timeDisplay.classList.remove("clock-mode");
     outMinutes = Math.floor(safeSeconds / 60);
     outSeconds = safeSeconds % 60;
+  }
+
+  const payload = {
+    text: displayText,
+    mode: displayMode,
+  };
+
+  // 透過 WebSocket 廣播目前顯示時間（給 /display 等使用）
+  if (socket) {
+    socket.emit("time:update", payload);
+  }
+
+  // 將目前顯示用時間寫入 localStorage，提供舊版 /display 或斷線時同步使用
+  try {
+    window.localStorage.setItem("display-time", JSON.stringify(payload));
+  } catch (e) {
+    // ignore storage errors
   }
 
   if (serialConnected) {
@@ -545,6 +639,48 @@ presetButtons.forEach((btn) => {
 });
 
 (async () => {
+  loadDisplaySettings();
+  syncDisplaySettingsUI();
+
+  if (displayColorButtons && displayColorButtons.length) {
+    displayColorButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const key = btn.dataset.color;
+        if (!key) return;
+        displaySettings.color = key;
+        syncDisplaySettingsUI();
+        broadcastDisplaySettings();
+      });
+    });
+  }
+
+  if (displayEffectSelect) {
+    displayEffectSelect.addEventListener("change", () => {
+      displaySettings.effect = displayEffectSelect.value || "none";
+      broadcastDisplaySettings();
+    });
+  }
+
+  if (displayWidthRange) {
+    displayWidthRange.addEventListener("input", () => {
+      const width = parseInt(displayWidthRange.value, 10) || 0;
+      displaySettings.width = Math.max(0, Math.min(20, width));
+      broadcastDisplaySettings();
+    });
+  }
+
+  if (openDisplayBtn) {
+    openDisplayBtn.addEventListener("click", () => {
+      window.open(
+        "/display",
+        "display-window",
+        "width=800,height=600,menubar=no,toolbar=no,location=no"
+      );
+      // 開啟同時推送一次設定，確保新視窗立即套用
+      broadcastDisplaySettings();
+    });
+  }
+
   await loadPresetsFromServer();
   applyFromInput(false);
   renderPresets();
